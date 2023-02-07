@@ -12,11 +12,15 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.List;
 import java.util.ServiceLoader;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
+import org.junit.platform.engine.DiscoverySelector;
 import org.junit.platform.engine.TestEngine;
 import org.junit.platform.engine.discovery.DiscoverySelectors;
+import org.junit.platform.launcher.Launcher;
 import org.junit.platform.launcher.LauncherConstants;
 import org.junit.platform.launcher.TagFilter;
 import org.junit.platform.launcher.core.LauncherConfig;
@@ -27,7 +31,7 @@ public class ActualRunner implements RunsTest {
 
   @Override
   public boolean run(String testClassName) {
-    var out = System.getenv("XML_OUTPUT_FILE");
+    String out = System.getenv("XML_OUTPUT_FILE");
     Path xmlOut;
     try {
       xmlOut = out != null ? Paths.get(out) : Files.createTempFile("test", ".xml");
@@ -36,23 +40,22 @@ public class ActualRunner implements RunsTest {
       throw new UncheckedIOException(e);
     }
 
-    try (var bazelJunitXml = new BazelJUnitOutputListener(xmlOut)) {
-      var summary = new CommandLineSummary();
+    try (BazelJUnitOutputListener bazelJunitXml = new BazelJUnitOutputListener(xmlOut)) {
+      CommandLineSummary summary = new CommandLineSummary();
 
       LauncherConfig config =
           LauncherConfig.builder().addTestExecutionListeners(bazelJunitXml, summary).build();
 
-      var classSelector = DiscoverySelectors.selectClass(testClassName);
+      DiscoverySelector classSelector = DiscoverySelectors.selectClass(testClassName);
 
-      List<String> discoveredEngines =
-          ServiceLoader.load(TestEngine.class).stream()
-              .map(ServiceLoader.Provider::get)
+      ServiceLoader<TestEngine> serviceLoader = ServiceLoader.load(TestEngine.class);
+      List<String> discoveredEngines = StreamSupport.stream(serviceLoader.spliterator(), false)
               .map(TestEngine::getId)
               .collect(Collectors.toList());
 
-      var request =
+      LauncherDiscoveryRequestBuilder request =
           LauncherDiscoveryRequestBuilder.request()
-              .selectors(List.of(classSelector))
+              .selectors(Collections.singletonList(classSelector))
               .filters(includeEngines(discoveredEngines))
               .configurationParameter(LauncherConstants.CAPTURE_STDERR_PROPERTY_NAME, "true")
               .configurationParameter(LauncherConstants.CAPTURE_STDOUT_PROPERTY_NAME, "true");
@@ -72,7 +75,7 @@ public class ActualRunner implements RunsTest {
 
       File exitFile = getExitFile();
 
-      var launcher = LauncherFactory.create(config);
+      Launcher launcher = LauncherFactory.create(config);
       launcher.execute(request.build());
 
       deleteExitFile(exitFile);
