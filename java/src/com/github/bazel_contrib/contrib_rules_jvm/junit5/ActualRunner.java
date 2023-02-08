@@ -49,7 +49,8 @@ public class ActualRunner implements RunsTest {
       DiscoverySelector classSelector = DiscoverySelectors.selectClass(testClassName);
 
       ServiceLoader<TestEngine> serviceLoader = ServiceLoader.load(TestEngine.class);
-      List<String> discoveredEngines = StreamSupport.stream(serviceLoader.spliterator(), false)
+      List<String> discoveredEngines =
+          StreamSupport.stream(serviceLoader.spliterator(), false)
               .map(TestEngine::getId)
               .collect(Collectors.toList());
 

@@ -82,7 +82,9 @@ public class CommandLineSummary implements TestExecutionListener {
     }
 
     public Throwable getCause() {
-      return result.getThrowable().orElseThrow(() -> new NoSuchElementException("No value present"));
+      return result
+          .getThrowable()
+          .orElseThrow(() -> new NoSuchElementException("No value present"));
     }
   }
 }

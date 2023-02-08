@@ -22,7 +22,7 @@ java_library(
         ":maven-deps-compile-only",
         ":system-exit-toggle",
     ],
-)
+)  # keep
 
 # Do not build with --release 8 to work around https://bugs.openjdk.org/browse/JDK-8214165.
 # Files in srcs must not reference SecurityManager as it will go away soon.

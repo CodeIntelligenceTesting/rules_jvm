@@ -69,7 +69,8 @@ public class JUnit5Runner {
     try {
       Class<? extends SystemExitToggle> java17ToggleClazz =
           Class.forName(JAVA17_SYSTEM_EXIT_TOGGLE).asSubclass(SystemExitToggle.class);
-      return java17ToggleClazz.getDeclaredConstructor(SystemExitToggle.class)
+      return java17ToggleClazz
+          .getDeclaredConstructor(SystemExitToggle.class)
           .newInstance(new Java11SystemExitToggle());
     } catch (Exception e) {
       // We don't care _why_ we can't load the toggle, but we can't. Ideally
